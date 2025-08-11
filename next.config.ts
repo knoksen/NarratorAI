@@ -18,8 +18,12 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  devServer: {
-    allowedDevOrigins: ['*.cloudworkstations.dev'],
+  webpack: (config) => {
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      'handlebars': 'handlebars/dist/handlebars.js',
+    };
+    return config;
   },
 };
 
