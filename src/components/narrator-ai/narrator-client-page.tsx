@@ -7,18 +7,10 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { AudioPlayer } from '@/components/narrator-ai/audio-player';
-import { handleEnhanceContent, handleGenerateAudio } from '@/app/actions';
+import { handleEnhanceContent, handleGenerateAudio, handlePdfToMarkdown } from '@/app/actions';
 import { UploadCloud, FileText, Loader2, Sparkles, Download, ArrowLeft, RefreshCw } from 'lucide-react';
 
 type Step = 'UPLOAD' | 'EDIT' | 'PLAY';
-
-const MOCK_MARKDOWN = `# A Journey to the Stars
-
-The old man looked up at the night sky, his eyes twinkling like the distant stars he so admired. "They're beautiful, aren't they?" he whispered to the young girl beside him.
-
-She nodded, her gaze fixed on the Milky Way, a shimmering river of light across the darkness. "Are we really going there, Grandpa?"
-
-"One day, little one," he said, his voice full of a gentle promise. "One day, we'll sail that river."`;
 
 export function NarratorClientPage() {
     const [step, setStep] = useState<Step>('UPLOAD');
@@ -45,14 +37,21 @@ export function NarratorClientPage() {
         }
     };
 
-    const handleConvertToMarkdown = () => {
+    const handleConvertToMarkdown = async () => {
         if (!file) return;
         setLoadingState('converting');
-        setTimeout(() => {
-            setMarkdown(MOCK_MARKDOWN);
+        const result = await handlePdfToMarkdown(file);
+        if (result.success && result.data) {
+            setMarkdown(result.data);
             setStep('EDIT');
-            setLoadingState('idle');
-        }, 1500);
+        } else {
+            toast({
+                title: 'Conversion Failed',
+                description: result.error,
+                variant: 'destructive',
+            });
+        }
+        setLoadingState('idle');
     };
     
     const handleEnhance = async () => {

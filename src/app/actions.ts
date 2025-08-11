@@ -2,6 +2,7 @@
 
 import { enhanceMarkdownNarrative } from '@/ai/flows/enhance-markdown-narrative';
 import { convertTextToSpeech } from '@/ai/flows/convert-text-to-speech';
+import { convertPdfToMarkdown } from '@/ai/flows/convert-pdf-to-markdown';
 
 export async function handleEnhanceContent(markdown: string) {
   try {
@@ -23,8 +24,22 @@ export async function handleGenerateAudio(text: string) {
       return { success: true, data: result.audioDataUri };
     }
     throw new Error('Audio data URI is empty.');
-  } catch (error) {
+  } catch (error)_ {
     console.error('Error generating audio:', error);
     return { success: false, error: 'Failed to generate audio.' };
+  }
+}
+
+export async function handlePdfToMarkdown(file: File) {
+  const bytes = await file.arrayBuffer();
+  const buffer = Buffer.from(bytes);
+  const pdfContent = buffer.toString('base64');
+  
+  try {
+    const result = await convertPdfToMarkdown({ pdfContent });
+    return { success: true, data: result.markdownContent };
+  } catch (error) {
+    console.error('Error converting PDF to markdown:', error);
+    return { success: false, error: 'Failed to convert PDF to markdown.' };
   }
 }
