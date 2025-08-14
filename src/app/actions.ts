@@ -24,7 +24,7 @@ export async function handleGenerateAudio(text: string) {
       return { success: true, data: result.audioDataUri };
     }
     throw new Error('Audio data URI is empty.');
-  } catch (error)_ {
+  } catch (error) {
     console.error('Error generating audio:', error);
     return { success: false, error: 'Failed to generate audio.' };
   }
