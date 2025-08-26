@@ -2,8 +2,8 @@ import { NarratorClientPage } from "@/components/narrator-ai/narrator-client-pag
 
 export default function Home() {
   return (
-    <main className="flex min-h-screen flex-col items-center p-4 pt-16 sm:p-8 sm:pt-24 md:p-12 md:pt-32 bg-background text-foreground">
-      <div className="z-10 w-full max-w-3xl items-center justify-between text-center mb-8">
+    <main className="flex min-h-[calc(100svh-56px)] flex-col items-center py-10 md:py-16">
+      <div className="z-10 w-full max-w-3xl items-center justify-between text-center mb-8" id="steps">
         <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight text-foreground">
           NarratorAI
         </h1>
