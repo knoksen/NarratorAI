@@ -20,6 +20,23 @@ contextBridge.exposeInMainWorld('electron', {
   getPlatform: () => ipcRenderer.invoke('app:getPlatform'),
   getInfo: () => ipcRenderer.invoke('app:getInfo'),
   
+  // Settings operations
+  settings: {
+    getAll: () => ipcRenderer.invoke('settings:getAll'),
+    get: (key) => ipcRenderer.invoke('settings:get', key),
+    set: (key, value) => ipcRenderer.invoke('settings:set', key, value),
+    update: (settings) => ipcRenderer.invoke('settings:update', settings),
+    reset: () => ipcRenderer.invoke('settings:reset'),
+    selectFolder: () => ipcRenderer.invoke('settings:selectFolder')
+  },
+  
+  // Recent files operations
+  recentFiles: {
+    add: (file) => ipcRenderer.invoke('recentFiles:add', file),
+    get: () => ipcRenderer.invoke('recentFiles:get'),
+    clear: () => ipcRenderer.invoke('recentFiles:clear')
+  },
+  
   // Menu event listeners
   onMenuOpenFile: (callback) => {
     ipcRenderer.on('menu-open-file', callback);

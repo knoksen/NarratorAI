@@ -8,9 +8,11 @@
 const { app, BrowserWindow, ipcMain, dialog, Menu, shell, Tray, nativeImage } = require('electron');
 const path = require('path');
 const isDev = require('electron-is-dev');
+const settings = require('./settings');
 
 let mainWindow;
 let tray = null;
+let settingsWindow = null;
 
 // Create application menu
 function createMenu() {
@@ -85,6 +87,14 @@ function createMenu() {
           label: 'Report Issue',
           click: async () => {
             await shell.openExternal('https://github.com/knoksen/NarratorAI/issues');
+          }
+        },
+        { type: 'separator' },
+        {
+          label: 'Preferences...',
+          accelerator: 'CmdOrCtrl+,',
+          click: () => {
+            createSettingsWindow();
           }
         },
         { type: 'separator' },
@@ -312,6 +322,112 @@ Built with:
     detail: aboutMessage,
     buttons: ['OK']
   });
+});
+
+// Settings window creation
+function createSettingsWindow() {
+  // Don't create if already exists
+  if (settingsWindow) {
+    settingsWindow.focus();
+    return;
+  }
+
+  settingsWindow = new BrowserWindow({
+    width: 600,
+    height: 700,
+    title: 'Preferences',
+    parent: mainWindow,
+    modal: true,
+    resizable: false,
+    minimizable: false,
+    maximizable: false,
+    webPreferences: {
+      nodeIntegration: false,
+      contextIsolation: true,
+      preload: path.join(__dirname, 'preload.js')
+    }
+  });
+
+  // Load settings page (we'll create this as a simple HTML file)
+  settingsWindow.loadFile(path.join(__dirname, 'settings.html'));
+
+  settingsWindow.on('closed', () => {
+    settingsWindow = null;
+  });
+}
+
+// Settings IPC handlers
+ipcMain.handle('settings:getAll', async () => {
+  return settings.getAllSettings();
+});
+
+ipcMain.handle('settings:get', async (event, key) => {
+  const getters = {
+    apiKey: () => settings.getApiKey(),
+    theme: () => settings.getTheme(),
+    defaultSavePath: () => settings.getDefaultSavePath(),
+    voice: () => settings.getVoiceSettings(),
+    autoUpdate: () => settings.getAutoUpdate(),
+    minimizeToTray: () => settings.getMinimizeToTray(),
+    launchAtStartup: () => settings.getLaunchAtStartup(),
+    recentFiles: () => settings.getRecentFiles()
+  };
+  
+  return getters[key] ? getters[key]() : null;
+});
+
+ipcMain.handle('settings:set', async (event, key, value) => {
+  const setters = {
+    apiKey: (val) => settings.setApiKey(val),
+    theme: (val) => settings.setTheme(val),
+    defaultSavePath: (val) => settings.setDefaultSavePath(val),
+    voice: (val) => settings.setVoiceSettings(val),
+    autoUpdate: (val) => settings.setAutoUpdate(val),
+    minimizeToTray: (val) => settings.setMinimizeToTray(val),
+    launchAtStartup: (val) => settings.setLaunchAtStartup(val)
+  };
+  
+  if (setters[key]) {
+    setters[key](value);
+    return true;
+  }
+  return false;
+});
+
+ipcMain.handle('settings:update', async (event, newSettings) => {
+  settings.updateSettings(newSettings);
+  return true;
+});
+
+ipcMain.handle('settings:reset', async () => {
+  settings.resetToDefaults();
+  return true;
+});
+
+ipcMain.handle('settings:selectFolder', async () => {
+  const result = await dialog.showOpenDialog(settingsWindow || mainWindow, {
+    properties: ['openDirectory']
+  });
+  
+  if (!result.canceled && result.filePaths.length > 0) {
+    return result.filePaths[0];
+  }
+  return null;
+});
+
+// Recent files management
+ipcMain.handle('recentFiles:add', async (event, file) => {
+  settings.addRecentFile(file);
+  return true;
+});
+
+ipcMain.handle('recentFiles:get', async () => {
+  return settings.getRecentFiles();
+});
+
+ipcMain.handle('recentFiles:clear', async () => {
+  settings.clearRecentFiles();
+  return true;
 });
 
 // Log app ready
