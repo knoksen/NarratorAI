@@ -1,0 +1,55 @@
+name: Build & Test
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: windows-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps
+      
+      - name: Type check
+        run: npm run typecheck
+      
+      - name: Lint
+        run: npm run lint
+        continue-on-error: true
+      
+      - name: Build Next.js
+        run: npm run build
+        env:
+          NODE_ENV: production
+      
+      - name: Generate icons
+        run: |
+          node scripts/create-icon.js
+          node scripts/create-icon-ico.js
+      
+      - name: Test Electron packaging
+        run: npx electron-builder --win --dir
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: windows-build
+          path: |
+            dist/win-unpacked/
+          retention-days: 7

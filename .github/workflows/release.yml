@@ -1,0 +1,147 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release (e.g., 1.1.0)'
+        required: true
+        type: string
+      draft:
+        description: 'Create as draft release'
+        required: false
+        type: boolean
+        default: false
+      prerelease:
+        description: 'Mark as pre-release'
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps
+      
+      - name: Generate icons
+        run: |
+          node scripts/create-icon.js
+          node scripts/create-icon-ico.js
+      
+      - name: Build Next.js
+        run: npm run build
+        env:
+          NODE_ENV: production
+      
+      - name: Build Electron application
+        run: npx electron-builder --win
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Generate checksums
+        shell: pwsh
+        run: |
+          $files = Get-ChildItem -Path dist -Filter *.exe
+          $checksums = @()
+          foreach ($file in $files) {
+            $hash = (Get-FileHash $file.FullName -Algorithm SHA256).Hash
+            $checksums += "$hash  $($file.Name)"
+          }
+          $checksums -join "`n" | Out-File -FilePath dist\SHA256SUMS.txt -Encoding UTF8
+      
+      - name: Extract version from tag
+        id: version
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "version=${{ inputs.version }}" >> $GITHUB_OUTPUT
+          else
+            echo "version=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Create release notes
+        shell: pwsh
+        run: |
+          $version = "${{ steps.version.outputs.version }}"
+          $installerFile = Get-ChildItem -Path dist -Filter "*-x64.exe" | Where-Object { $_.Name -notlike "*Portable*" } | Select-Object -First 1
+          $portableFile = Get-ChildItem -Path dist -Filter "*Portable*.exe" | Select-Object -First 1
+          
+          $installerHash = (Get-FileHash $installerFile.FullName -Algorithm SHA256).Hash
+          $portableHash = (Get-FileHash $portableFile.FullName -Algorithm SHA256).Hash
+          $installerSize = [math]::Round($installerFile.Length / 1MB, 2)
+          $portableSize = [math]::Round($portableFile.Length / 1MB, 2)
+          
+          $notes = @"
+          ## 🚀 NarratorAI v$version
+          
+          ### 📦 Downloads
+          
+          **Windows Installer (Recommended)** - $installerSize MB
+          - SHA256: ``$installerHash``
+          
+          **Portable Version** - $portableSize MB
+          - SHA256: ``$portableHash``
+          
+          ### 🚀 Getting Started
+          
+          1. Download your preferred version
+          2. Get a free API key: https://makersuite.google.com/app/apikey
+          3. Run NarratorAI and enter your API key
+          4. Upload a PDF and start creating!
+          
+          ### ⚠️ Windows SmartScreen Warning
+          
+          App is not code-signed. Click "More info" → "Run anyway"
+          
+          ### 📖 Documentation
+          
+          - [README](https://github.com/knoksen/NarratorAI/blob/main/README.md)
+          - [Desktop Features](https://github.com/knoksen/NarratorAI/blob/main/DESKTOP_FEATURES.md)
+          - [Build Guide](https://github.com/knoksen/NarratorAI/blob/main/BUILD_GUIDE.md)
+          "@
+          
+          $notes | Out-File -FilePath dist\RELEASE_NOTES.md -Encoding UTF8
+      
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ steps.version.outputs.version }}
+          name: NarratorAI v${{ steps.version.outputs.version }}
+          body_path: dist/RELEASE_NOTES.md
+          draft: ${{ inputs.draft || false }}
+          prerelease: ${{ inputs.prerelease || false }}
+          files: |
+            dist/*.exe
+            dist/SHA256SUMS.txt
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: build-artifacts
+          path: |
+            dist/
+            .next/
+          retention-days: 7

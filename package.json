@@ -1,6 +1,10 @@
 {
-  "name": "nextn",
-  "version": "0.1.0",
+  "name": "narratorai",
+  "version": "1.0.0",
+  "description": "Transform documents into engaging audio narratives with AI",
+  "author": "knoksen",
+  "main": "electron/main.js",
+  "homepage": "./",
   "private": true,
   "scripts": {
     "dev": "next dev -p 9002",
@@ -9,7 +13,23 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test:flows": "tsx test/test-flows.ts",
+    "electron": "electron .",
+    "electron:dev": "concurrently \"npm run dev\" \"wait-on http://localhost:9002 && electron .\"",
+    "build:desktop": "npm run icon:ico && next build && electron-builder",
+    "build:win": "npm run icon:ico && next build && electron-builder --win",
+    "build:portable": "npm run icon:ico && next build && electron-builder --win portable",
+    "pack": "electron-builder --dir",
+    "icon:generate": "node scripts/create-icon.js",
+    "icon:ico": "node scripts/create-icon-ico.js",
+    "icon:check": "node scripts/generate-icons.js",
+    "release": "node scripts/release.js",
+    "release:draft": "node scripts/release.js --draft",
+    "release:prerelease": "node scripts/release.js --prerelease",
+    "version:patch": "npm version patch --no-git-tag-version",
+    "version:minor": "npm version minor --no-git-tag-version",
+    "version:major": "npm version major --no-git-tag-version"
   },
   "dependencies": {
     "@genkit-ai/firebase": "^1.16.0",
@@ -47,7 +67,7 @@
     "firebase": "^11.10.0",
     "genkit": "^1.14.1",
     "lucide-react": "^0.475.0",
-    "next": "15.3.3",
+    "next": "^16.1.1",
     "patch-package": "^8.0.0",
     "pdf-parse": "^1.1.1",
     "react": "^18.3.1",
@@ -66,9 +86,16 @@
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "@types/wav": "^1.0.2",
+    "concurrently": "^9.2.1",
+    "cross-env": "^10.1.0",
+    "electron": "^39.2.7",
+    "electron-builder": "^26.4.0",
+    "electron-is-dev": "^3.0.1",
     "genkit-cli": "^1.14.1",
+    "png2icons": "^2.0.1",
     "postcss": "^8",
     "tailwindcss": "^3.4.1",
-    "typescript": "5.9.2"
+    "typescript": "5.9.2",
+    "wait-on": "^9.0.3"
   }
 }

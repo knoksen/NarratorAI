@@ -1,88 +1,178 @@
 # NarratorAI
 
-NarratorAI is an intelligent storytelling platform designed to help you create, narrate, and share compelling stories with the power of artificial intelligence. With a focus on seamless user experience and creative flexibility, NarratorAI empowers writers, educators, content creators, and developers to bring stories to life like never before.
+Transform your documents into engaging audio narratives with AI-powered enhancement and text-to-speech.
+
+**Available as:** Web Application | Windows Desktop App
 
 ---
 
 ## 🚀 Features
 
-- **AI-Powered Story Generation:**  
-  Generate unique stories, dialogue, and narratives with advanced AI models.
+- **PDF Upload & Conversion:**  
+  Upload PDF documents and convert them to editable Markdown format.
 
-- **Multimodal Support:**  
-  Integrate text, audio, and visuals to create immersive storytelling experiences.
+- **AI Content Enhancement:**  
+  Use AI to add emotion, improve formatting, and enhance narrative quality for audio narration.
 
-- **Custom Story Templates:**  
-  Start fast with a variety of templates for different genres and audiences.
+- **Text-to-Speech:**  
+  Generate high-quality audio using Google's Gemini TTS with natural-sounding voices.
 
-- **Interactive Narration:**  
-  Enable real-time story branching and user interaction.
+- **Interactive Audio Player:**  
+  Play, pause, and control your generated audio with a beautiful player interface.
 
-- **Collaborative Editing:**  
-  Work together with friends or colleagues on stories, scripts, and content.
+- **Export & Download:**  
+  Download your enhanced audio as WAV files for use anywhere.
 
-- **Export & Share:**  
-  Export your stories to multiple formats (PDF, audio, etc.) and share them across platforms.
+- **Desktop App:**  
+  Run as a native Windows application with offline support (after initial setup).
 
 ---
 
 ## 📦 Installation
 
-Clone the repository:
+1. **Clone the repository:**
 
 ```bash
 git clone https://github.com/knoksen/NarratorAI.git
 cd NarratorAI
 ```
 
-Install dependencies:
+1. **Install dependencies:**
 
 ```bash
-# Using pip (example for Python-based projects)
-pip install -r requirements.txt
+npm install
 ```
 
-> Please check the relevant section for your environment (Node.js, Docker, etc.) if not using Python.
+1. **Set up environment variables:**
+
+Create a `.env.local` file in the root directory:
+
+```bash
+cp .env.example .env.local
+```
+
+Add your Google AI API key to `.env.local`:
+
+```env
+GOOGLE_API_KEY=your_google_api_key_here
+```
+
+Get your API key from: <https://makersuite.google.com/app/apikey>
 
 ---
 
 ## 🛠️ Usage
 
-1. **Start the application:**
+### Web Application
 
-   ```bash
-   # For Python
-   python main.py
+1. **Start the development server:**
 
-   # For Node.js
-   npm start
-   ```
+```bash
+npm run dev
+```
 
-2. **Open your browser and navigate to**  
-   `http://localhost:8000` (or the specified port).
+1. **Open your browser and navigate to:**  
+   `http://localhost:9002`
 
-3. **Begin creating stories!**
+1. **Use the application:**
+   - Upload a PDF document (up to 10MB)
+   - Review and edit the extracted text
+   - Enhance the content with AI
+   - Generate audio from the text
+   - Download your audio file
+
+### Windows Desktop App
+
+1. **Download from Releases:**
+
+Visit [Releases](https://github.com/knoksen/NarratorAI/releases/latest) to download:
+- **Windows Installer** (recommended) - Includes shortcuts and uninstaller
+- **Portable Version** - Run from any folder, no installation needed
+
+2. **Or run in development mode:**
+
+```bash
+npm run electron:dev
+```
+
+This launches NarratorAI as a native Windows application.
+
+3. **Or build your own installer:**
+
+```bash
+npm run build:win
+```
+
+Creates installer and portable versions in the `dist/` folder.
+
+---
+
+## 🤖 Automated Releases
+
+NarratorAI includes complete release automation! See [AUTOMATION.md](AUTOMATION.md) for details.
+
+**Quick release:**
+```bash
+npm run release -- 1.1.0
+```
+
+**GitHub Actions:** Push a tag to auto-build and release:
+```bash
+git tag v1.1.0
+git push origin v1.1.0
+```
+
+See [electron/README.md](electron/README.md) for detailed desktop app documentation.
+
+---
+   - Upload a PDF document (up to 10MB)
+   - Review and edit the extracted text
+   - Enhance the content with AI
+   - Generate audio from the text
+   - Download your audio file
 
 ---
 
 ## 🤖 Technologies Used
 
-- Language: Python / JavaScript / [Add relevant languages here]
-- Frameworks: [Django, Flask, React, etc.]
-- AI: [OpenAI GPT, Transformers, etc.]
-- Database: [PostgreSQL, SQLite, etc.]
-- Others: [List any other major technologies]
+- **Framework:** Next.js 16 with App Router
+- **Desktop:** Electron (Windows native app)
+- **Language:** TypeScript
+- **AI:** Google Gemini 2.0 Flash (via Genkit)
+- **TTS:** Google Gemini 2.5 Flash Preview TTS
+- **UI:** React, Tailwind CSS, Radix UI
+- **PDF Processing:** pdf-parse
+- **Audio:** wav encoder
+- **Build:** electron-builder
 
 ---
 
-## 📄 Example
+## 📁 Project Structure
 
-```python
-from narratorai import StoryGenerator
-
-generator = StoryGenerator()
-story = generator.create_story(prompt="A detective in a futuristic city")
-print(story)
+```telectron/             # Electron desktop app files
+│   ├── main.js          # Main process
+│   ├── preload.js       # Preload script
+│   └── README.md        # Desktop app docs
+├── src/
+│   ├── ai/              # AI flows and Genkit configuration
+│   │   ├── genkit.ts
+│   │   └── flows/
+│   │       ├── convert-pdf-to-markdown.ts
+│   │       ├── enhance-markdown-narrative.ts
+│   │       └── convert-text-to-speech.ts
+│   ├── app/             # Next.js app router pages
+│   ├── components/      # React components
+│   │   ├── narrator-ai/ # Main application components
+│   │   └── ui/          # Reusable UI components
+│   └── lib/             # Utility functions
+├── public/              # Static assets
+│   └── samples/         # Sample PDF files
+├── test/                # Test files
+│   ├── data/            # Test data
+│   └── output/          # Test output
+└── scripts/             # Build and utility scriptsF files
+└── test/                 # Test files
+    └── data/             # Test data
 ```
 
 ---
