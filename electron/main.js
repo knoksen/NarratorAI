@@ -10,10 +10,12 @@ const path = require('path');
 const isDev = require('electron-is-dev');
 const settings = require('./settings');
 const updater = require('./updater');
+const BatchProcessor = require('./batch-processor');
 
 let mainWindow;
 let tray = null;
 let settingsWindow = null;
+let batchProcessor = null;
 
 // Create application menu
 function createMenu() {
@@ -27,6 +29,23 @@ function createMenu() {
           click: async () => {
             if (mainWindow) {
               mainWindow.webContents.send('menu-open-file');
+            }
+          }
+        },
+        {
+          label: 'Open Multiple PDFs...',
+          accelerator: 'CmdOrCtrl+Shift+O',
+          click: async () => {
+            const { canceled, filePaths } = await dialog.showOpenDialog(mainWindow, {
+              properties: ['openFile', 'multiSelections'],
+              filters: [
+                { name: 'PDF Files', extensions: ['pdf'] },
+                { name: 'All Files', extensions: ['*'] }
+              ]
+            });
+            
+            if (!canceled && filePaths.length > 0) {
+              mainWindow.webContents.send('menu-open-batch', filePaths);
             }
           }
         },
@@ -252,6 +271,58 @@ app.whenReady().then(() => {
   // Initialize auto-updater
   updater.setMainWindow(mainWindow);
   updater.startPeriodicCheck();
+  
+  // Initialize batch processor
+  batchProcessor = new BatchProcessor();
+  
+  // Forward batch processor events to renderer
+  batchProcessor.on('queue-updated', (data) => {
+    mainWindow.webContents.send('batch:queue-updated', data);
+  });
+  
+  batchProcessor.on('batch-started', (data) => {
+    mainWindow.webContents.send('batch:started', data);
+  });
+  
+  batchProcessor.on('batch-paused', (data) => {
+    mainWindow.webContents.send('batch:paused', data);
+  });
+  
+  batchProcessor.on('batch-resumed', (data) => {
+    mainWindow.webContents.send('batch:resumed', data);
+  });
+  
+  batchProcessor.on('batch-cancelled', (data) => {
+    mainWindow.webContents.send('batch:cancelled', data);
+  });
+  
+  batchProcessor.on('batch-completed', (data) => {
+    mainWindow.webContents.send('batch:completed', data);
+  });
+  
+  batchProcessor.on('batch-error', (data) => {
+    mainWindow.webContents.send('batch:error', data);
+  });
+  
+  batchProcessor.on('item-started', (data) => {
+    mainWindow.webContents.send('batch:item-started', data);
+  });
+  
+  batchProcessor.on('item-progress', (data) => {
+    mainWindow.webContents.send('batch:item-progress', data);
+  });
+  
+  batchProcessor.on('item-completed', (data) => {
+    mainWindow.webContents.send('batch:item-completed', data);
+  });
+  
+  batchProcessor.on('item-failed', (data) => {
+    mainWindow.webContents.send('batch:item-failed', data);
+  });
+  
+  batchProcessor.on('batch-reset', () => {
+    mainWindow.webContents.send('batch:reset');
+  });
 });
 
 // Handle quit properly with tray
@@ -488,6 +559,138 @@ ipcMain.handle('updater:install', async () => {
 ipcMain.handle('updater:getVersion', async () => {
   return updater.getCurrentVersion();
 });
+
+// Batch Processing IPC handlers
+ipcMain.handle('batch:addFiles', async (event, filePaths) => {
+  if (!batchProcessor) {
+    return { error: 'Batch processor not initialized' };
+  }
+  return batchProcessor.addToQueue(filePaths);
+});
+
+ipcMain.handle('batch:removeFile', async (event, itemId) => {
+  if (!batchProcessor) {
+    return { error: 'Batch processor not initialized' };
+  }
+  return batchProcessor.removeFromQueue(itemId);
+});
+
+ipcMain.handle('batch:clear', async () => {
+  if (!batchProcessor) {
+    return { error: 'Batch processor not initialized' };
+  }
+  return batchProcessor.clearQueue();
+});
+
+ipcMain.handle('batch:start', async (event, processFunction) => {
+  if (!batchProcessor) {
+    return { error: 'Batch processor not initialized' };
+  }
+  
+  // Process function is passed as a reference from renderer
+  // We'll call the renderer back to process each file
+  const processor = async (filePath, progressCallback) => {
+    // Send processing request to renderer and wait for result
+    return new Promise((resolve, reject) => {
+      const timeoutId = setTimeout(() => {
+        reject(new Error('Processing timeout'));
+      }, 300000); // 5 minute timeout per file
+      
+      // Listen for result
+      const resultHandler = (event, result) => {
+        clearTimeout(timeoutId);
+        ipcMain.removeListener('batch:process-result', resultHandler);
+        
+        if (result.success) {
+          resolve(result);
+        } else {
+          reject(new Error(result.error || 'Processing failed'));
+        }
+      };
+      
+      ipcMain.on('batch:process-result', resultHandler);
+      
+      // Send request to renderer
+      mainWindow.webContents.send('batch:process-file', {
+        filePath,
+        progressCallback: (progress) => progressCallback(progress)
+      });
+    });
+  };
+  
+  return await batchProcessor.start(processor);
+});
+
+ipcMain.handle('batch:pause', async () => {
+  if (!batchProcessor) {
+    return { error: 'Batch processor not initialized' };
+  }
+  return batchProcessor.pause();
+});
+
+ipcMain.handle('batch:resume', async () => {
+  if (!batchProcessor) {
+    return { error: 'Batch processor not initialized' };
+  }
+  
+  // Same processor as start
+  const processor = async (filePath, progressCallback) => {
+    return new Promise((resolve, reject) => {
+      const timeoutId = setTimeout(() => {
+        reject(new Error('Processing timeout'));
+      }, 300000);
+      
+      const resultHandler = (event, result) => {
+        clearTimeout(timeoutId);
+        ipcMain.removeListener('batch:process-result', resultHandler);
+        
+        if (result.success) {
+          resolve(result);
+        } else {
+          reject(new Error(result.error || 'Processing failed'));
+        }
+      };
+      
+      ipcMain.on('batch:process-result', resultHandler);
+      mainWindow.webContents.send('batch:process-file', {
+        filePath,
+        progressCallback: (progress) => progressCallback(progress)
+      });
+    });
+  };
+  
+  return await batchProcessor.resume(processor);
+});
+
+ipcMain.handle('batch:cancel', async () => {
+  if (!batchProcessor) {
+    return { error: 'Batch processor not initialized' };
+  }
+  return batchProcessor.cancel();
+});
+
+ipcMain.handle('batch:getStatus', async () => {
+  if (!batchProcessor) {
+    return { error: 'Batch processor not initialized' };
+  }
+  return batchProcessor.getStatus();
+});
+
+ipcMain.handle('batch:getProgress', async () => {
+  if (!batchProcessor) {
+    return 0;
+  }
+  return batchProcessor.getOverallProgress();
+});
+
+ipcMain.handle('batch:reset', async () => {
+  if (!batchProcessor) {
+    return { error: 'Batch processor not initialized' };
+  }
+  batchProcessor.reset();
+  return true;
+});
+
 // Log app ready
 console.log('NarratorAI Desktop App Starting...');
 console.log('Development mode:', isDev);

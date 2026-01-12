@@ -45,9 +45,44 @@ contextBridge.exposeInMainWorld('electron', {
     getVersion: () => ipcRenderer.invoke('updater:getVersion')
   },
   
+  // Batch processing operations
+  batch: {
+    addFiles: (filePaths) => ipcRenderer.invoke('batch:addFiles', filePaths),
+    removeFile: (itemId) => ipcRenderer.invoke('batch:removeFile', itemId),
+    clear: () => ipcRenderer.invoke('batch:clear'),
+    start: () => ipcRenderer.invoke('batch:start'),
+    pause: () => ipcRenderer.invoke('batch:pause'),
+    resume: () => ipcRenderer.invoke('batch:resume'),
+    cancel: () => ipcRenderer.invoke('batch:cancel'),
+    getStatus: () => ipcRenderer.invoke('batch:getStatus'),
+    getProgress: () => ipcRenderer.invoke('batch:getProgress'),
+    reset: () => ipcRenderer.invoke('batch:reset'),
+    
+    // Event listeners
+    onQueueUpdated: (callback) => ipcRenderer.on('batch:queue-updated', (event, data) => callback(data)),
+    onStarted: (callback) => ipcRenderer.on('batch:started', (event, data) => callback(data)),
+    onPaused: (callback) => ipcRenderer.on('batch:paused', (event, data) => callback(data)),
+    onResumed: (callback) => ipcRenderer.on('batch:resumed', (event, data) => callback(data)),
+    onCancelled: (callback) => ipcRenderer.on('batch:cancelled', (event, data) => callback(data)),
+    onCompleted: (callback) => ipcRenderer.on('batch:completed', (event, data) => callback(data)),
+    onError: (callback) => ipcRenderer.on('batch:error', (event, data) => callback(data)),
+    onItemStarted: (callback) => ipcRenderer.on('batch:item-started', (event, data) => callback(data)),
+    onItemProgress: (callback) => ipcRenderer.on('batch:item-progress', (event, data) => callback(data)),
+    onItemCompleted: (callback) => ipcRenderer.on('batch:item-completed', (event, data) => callback(data)),
+    onItemFailed: (callback) => ipcRenderer.on('batch:item-failed', (event, data) => callback(data)),
+    onReset: (callback) => ipcRenderer.on('batch:reset', () => callback()),
+    
+    // File processing callback
+    onProcessFile: (callback) => ipcRenderer.on('batch:process-file', (event, data) => callback(data)),
+    sendProcessResult: (result) => ipcRenderer.send('batch:process-result', result)
+  },
+  
   // Menu event listeners
   onMenuOpenFile: (callback) => {
     ipcRenderer.on('menu-open-file', callback);
+  },
+  onMenuOpenBatch: (callback) => {
+    ipcRenderer.on('menu-open-batch', (event, filePaths) => callback(filePaths));
   },
   onMenuSaveAudio: (callback) => {
     ipcRenderer.on('menu-save-audio', callback);
