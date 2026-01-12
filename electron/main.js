@@ -11,6 +11,7 @@ const isDev = require('electron-is-dev');
 const settings = require('./settings');
 const updater = require('./updater');
 const BatchProcessor = require('./batch-processor');
+const toast = require('./toast-manager');
 
 let mainWindow;
 let tray = null;
@@ -731,6 +732,36 @@ ipcMain.handle('batch:reset', async () => {
   }
   batchProcessor.reset();
   return true;
+});
+
+// Toast Notification IPC handlers
+ipcMain.handle('toast:show', async (event, options) => {
+  return toast.show(options);
+});
+
+ipcMain.handle('toast:success', async (event, title, body, options) => {
+  return toast.success(title, body, options);
+});
+
+ipcMain.handle('toast:error', async (event, title, body, options) => {
+  return toast.error(title, body, options);
+});
+
+ipcMain.handle('toast:warning', async (event, title, body, options) => {
+  return toast.warning(title, body, options);
+});
+
+ipcMain.handle('toast:info', async (event, title, body, options) => {
+  return toast.info(title, body, options);
+});
+
+ipcMain.handle('toast:closeAll', async () => {
+  toast.closeAll();
+  return true;
+});
+
+ipcMain.handle('toast:isSupported', async () => {
+  return toast.isSupported();
 });
 
 // Log app ready

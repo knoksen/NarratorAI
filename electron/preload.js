@@ -77,6 +77,17 @@ contextBridge.exposeInMainWorld('electron', {
     sendProcessResult: (result) => ipcRenderer.send('batch:process-result', result)
   },
   
+  // Toast notifications
+  toast: {
+    show: (options) => ipcRenderer.invoke('toast:show', options),
+    success: (title, body, options) => ipcRenderer.invoke('toast:success', title, body, options),
+    error: (title, body, options) => ipcRenderer.invoke('toast:error', title, body, options),
+    warning: (title, body, options) => ipcRenderer.invoke('toast:warning', title, body, options),
+    info: (title, body, options) => ipcRenderer.invoke('toast:info', title, body, options),
+    closeAll: () => ipcRenderer.invoke('toast:closeAll'),
+    isSupported: () => ipcRenderer.invoke('toast:isSupported')
+  },
+  
   // Menu event listeners
   onMenuOpenFile: (callback) => {
     ipcRenderer.on('menu-open-file', callback);
