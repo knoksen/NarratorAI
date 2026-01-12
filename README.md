@@ -4,10 +4,13 @@ Transform your documents into engaging audio narratives with AI-powered enhancem
 
 **Available as:** Web Application | Windows Desktop App
 
+**Current Version:** 1.0.0
+
 ---
 
 ## 🚀 Features
 
+### Core Features
 - **PDF Upload & Conversion:**  
   Upload PDF documents and convert them to editable Markdown format.
 
@@ -23,8 +26,24 @@ Transform your documents into engaging audio narratives with AI-powered enhancem
 - **Export & Download:**  
   Download your enhanced audio as WAV files for use anywhere.
 
-- **Desktop App:**  
-  Run as a native Windows application with offline support (after initial setup).
+### Desktop App Features (Windows)
+- **Native Windows Application:**  
+  Run as a standalone desktop app with full offline support.
+
+- **Settings & Preferences:**  
+  Customizable settings with encrypted API key storage, theme selection, and voice preferences.
+
+- **Auto-Update System:**  
+  Automatic updates via GitHub Releases with user-friendly notifications.
+
+- **Batch Processing:**  
+  Process multiple PDF files in queue with progress tracking and pause/resume controls.
+
+- **Recent Files:**  
+  Quick access to recently processed files with keyboard shortcuts (Ctrl+1-9).
+
+- **Toast Notifications:**  
+  Native desktop notifications for processing status and system events.
 
 ---
 
