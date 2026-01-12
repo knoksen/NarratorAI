@@ -84,6 +84,9 @@ contextBridge.exposeInMainWorld('electron', {
   onMenuOpenBatch: (callback) => {
     ipcRenderer.on('menu-open-batch', (event, filePaths) => callback(filePaths));
   },
+  onMenuOpenRecentFile: (callback) => {
+    ipcRenderer.on('menu-open-recent-file', (event, filePath) => callback(filePath));
+  },
   onMenuSaveAudio: (callback) => {
     ipcRenderer.on('menu-save-audio', callback);
   },

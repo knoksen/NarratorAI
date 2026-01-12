@@ -19,6 +19,43 @@ let batchProcessor = null;
 
 // Create application menu
 function createMenu() {
+  const recentFiles = settings.getRecentFiles();
+  
+  // Build recent files submenu
+  const recentFilesSubmenu = [];
+  
+  if (recentFiles.length > 0) {
+    recentFiles.forEach((file, index) => {
+      recentFilesSubmenu.push({
+        label: path.basename(file),
+        accelerator: index < 9 ? `CmdOrCtrl+${index + 1}` : undefined,
+        click: () => {
+          if (mainWindow) {
+            mainWindow.webContents.send('menu-open-recent-file', file);
+          }
+        },
+        // Show full path in tooltip
+        toolTip: file
+      });
+    });
+    
+    recentFilesSubmenu.push(
+      { type: 'separator' },
+      {
+        label: 'Clear Recent Files',
+        click: () => {
+          settings.clearRecentFiles();
+          createMenu(); // Refresh menu
+        }
+      }
+    );
+  } else {
+    recentFilesSubmenu.push({
+      label: 'No recent files',
+      enabled: false
+    });
+  }
+  
   const template = [
     {
       label: 'File',
@@ -48,6 +85,11 @@ function createMenu() {
               mainWindow.webContents.send('menu-open-batch', filePaths);
             }
           }
+        },
+        { type: 'separator' },
+        {
+          label: 'Recent Files',
+          submenu: recentFilesSubmenu
         },
         { type: 'separator' },
         {
@@ -516,8 +558,7 @@ ipcMain.handle('settings:selectFolder', async () => {
 
 // Recent files management
 ipcMain.handle('recentFiles:add', async (event, file) => {
-  settings.addRecentFile(file);
-  return true;
+  settings.addRecentFile(file);  createMenu(); // Refresh menu to show updated recent files  return true;
 });
 
 ipcMain.handle('recentFiles:get', async () => {
@@ -526,6 +567,7 @@ ipcMain.handle('recentFiles:get', async () => {
 
 ipcMain.handle('recentFiles:clear', async () => {
   settings.clearRecentFiles();
+  createMenu(); // Refresh menu to clear recent files
   return true;
 });
 // Updater IPC handlers
