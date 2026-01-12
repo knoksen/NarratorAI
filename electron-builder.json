@@ -1,0 +1,51 @@
+{
+  "appId": "com.narratorai.app",
+  "productName": "NarratorAI",
+  "copyright": "Copyright © 2026 ${author}",
+  "directories": {
+    "output": "dist",
+    "buildResources": "electron/resources"
+  },
+  "files": [
+    "electron/**/*",
+    "out/**/*",
+    "node_modules/**/*",
+    "package.json"
+  ],
+  "extraResources": [
+    {
+      "from": "public",
+      "to": "public"
+    }
+  ],
+  "win": {
+    "target": [
+      {
+        "target": "nsis",
+        "arch": [
+          "x64"
+        ]
+      },
+      {
+        "target": "portable",
+        "arch": [
+          "x64"
+        ]
+      }
+    ],
+    "icon": "electron/icon.ico",
+    "artifactName": "${productName}-${version}-${arch}.${ext}"
+  },
+  "nsis": {
+    "oneClick": false,
+    "allowToChangeInstallationDirectory": true,
+    "createDesktopShortcut": true,
+    "createStartMenuShortcut": true,
+    "shortcutName": "NarratorAI",
+    "installerIcon": "electron/icon.ico",
+    "uninstallerIcon": "electron/icon.ico"
+  },
+  "portable": {
+    "artifactName": "${productName}-${version}-Portable.${ext}"
+  }
+}

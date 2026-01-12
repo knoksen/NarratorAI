@@ -61,7 +61,24 @@ const enhanceMarkdownNarrativeFlow = ai.defineFlow(
     outputSchema: EnhanceMarkdownNarrativeOutputSchema,
   },
   async input => {
-    const {output} = await prompt(input);
-    return output!;
+    try {
+      if (!input.markdownContent || input.markdownContent.trim().length === 0) {
+        throw new Error('No content provided for enhancement.');
+      }
+      
+      const {output} = await prompt(input);
+      
+      if (!output || !output.enhancedContent) {
+        throw new Error('AI failed to generate enhanced content. Please try again.');
+      }
+      
+      return output;
+    } catch (error) {
+      console.error('Error enhancing markdown narrative:', error);
+      if (error instanceof Error) {
+        throw new Error(`Failed to enhance content: ${error.message}`);
+      }
+      throw new Error('Failed to enhance content. Please check your API key and try again.');
+    }
   }
 );

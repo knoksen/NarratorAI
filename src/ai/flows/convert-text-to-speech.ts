@@ -60,27 +60,49 @@ const convertTextToSpeechFlow = ai.defineFlow(
     outputSchema: ConvertTextToSpeechOutputSchema,
   },
   async input => {
-    const { media } = await ai.generate({
-      model: 'googleai/gemini-2.5-flash-preview-tts',
-      config: {
-        responseModalities: ['AUDIO'],
-        speechConfig: {
-          voiceConfig: {
-            prebuiltVoiceConfig: { voiceName: 'Algenib' },
+    try {
+      if (!input.text || input.text.trim().length === 0) {
+        throw new Error('No text provided for speech generation.');
+      }
+      
+      // Text length validation (Google TTS has limits)
+      if (input.text.length > 5000) {
+        throw new Error('Text is too long. Please limit to 5000 characters.');
+      }
+      
+      const { media } = await ai.generate({
+        model: 'googleai/gemini-2.5-flash-preview-tts',
+        config: {
+          responseModalities: ['AUDIO'],
+          speechConfig: {
+            voiceConfig: {
+              prebuiltVoiceConfig: { voiceName: 'Algenib' },
+            },
           },
         },
-      },
-      prompt: input.text,
-    });
-    if (!media) {
-      throw new Error('no media returned');
+        prompt: input.text,
+      });
+      
+      if (!media || !media.url) {
+        throw new Error('No audio was generated. Please try again.');
+      }
+      
+      const audioBuffer = Buffer.from(
+        media.url.substring(media.url.indexOf(',') + 1),
+        'base64'
+      );
+      
+      const wavData = await toWav(audioBuffer);
+      
+      return {
+        audioDataUri: 'data:audio/wav;base64,' + wavData,
+      };
+    } catch (error) {
+      console.error('Error converting text to speech:', error);
+      if (error instanceof Error) {
+        throw new Error(`Failed to generate audio: ${error.message}`);
+      }
+      throw new Error('Failed to generate audio. Please check your API key and try again.');
     }
-    const audioBuffer = Buffer.from(
-      media.url.substring(media.url.indexOf(',') + 1),
-      'base64'
-    );
-    return {
-      audioDataUri: 'data:audio/wav;base64,' + (await toWav(audioBuffer)),
-    };
   }
 );

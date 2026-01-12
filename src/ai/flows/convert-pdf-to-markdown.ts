@@ -43,10 +43,23 @@ const convertPdfToMarkdownFlow = ai.defineFlow(
     outputSchema: ConvertPdfToMarkdownOutputSchema,
   },
   async input => {
-    const pdfBuffer = Buffer.from(input.pdfContent, 'base64');
-    const data = await pdf(pdfBuffer);
-    return {
-      markdownContent: data.text,
-    };
+    try {
+      const pdfBuffer = Buffer.from(input.pdfContent, 'base64');
+      const data = await pdf(pdfBuffer);
+      
+      if (!data.text || data.text.trim().length === 0) {
+        throw new Error('PDF appears to be empty or contains only images. Please try a PDF with text content.');
+      }
+      
+      return {
+        markdownContent: data.text,
+      };
+    } catch (error) {
+      console.error('Error converting PDF to markdown:', error);
+      if (error instanceof Error) {
+        throw new Error(`Failed to convert PDF: ${error.message}`);
+      }
+      throw new Error('Failed to convert PDF to markdown. Please ensure the file is a valid PDF.');
+    }
   }
 );
