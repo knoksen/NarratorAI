@@ -9,6 +9,7 @@ const { app, BrowserWindow, ipcMain, dialog, Menu, shell, Tray, nativeImage } = 
 const path = require('path');
 const isDev = require('electron-is-dev');
 const settings = require('./settings');
+const updater = require('./updater');
 
 let mainWindow;
 let tray = null;
@@ -77,6 +78,17 @@ function createMenu() {
     {
       label: 'Help',
       submenu: [
+        {
+          label: 'Check for Updates...',
+          click: async () => {
+            try {
+              await updater.checkForUpdates(false);
+            } catch (error) {
+              console.error('Error checking for updates:', error);
+            }
+          }
+        },
+        { type: 'separator' },
         {
           label: 'Documentation',
           click: async () => {
@@ -236,11 +248,16 @@ app.whenReady().then(() => {
       createWindow();
     }
   });
+  
+  // Initialize auto-updater
+  updater.setMainWindow(mainWindow);
+  updater.startPeriodicCheck();
 });
 
 // Handle quit properly with tray
 app.on('before-quit', () => {
   app.isQuitting = true;
+  updater.stopPeriodicCheck();
 });
 
 app.on('window-all-closed', () => {
@@ -396,11 +413,22 @@ ipcMain.handle('settings:set', async (event, key, value) => {
 
 ipcMain.handle('settings:update', async (event, newSettings) => {
   settings.updateSettings(newSettings);
+  
+  // Update auto-updater based on settings
+  if (newSettings.autoUpdate !== undefined) {
+    if (newSettings.autoUpdate) {
+      updater.startPeriodicCheck();
+    } else {
+      updater.stopPeriodicCheck();
+    }
+  }
+  
   return true;
 });
 
 ipcMain.handle('settings:reset', async () => {
   settings.resetToDefaults();
+  updater.startPeriodicCheck(); // Re-enable if defaults have it enabled
   return true;
 });
 
@@ -429,7 +457,37 @@ ipcMain.handle('recentFiles:clear', async () => {
   settings.clearRecentFiles();
   return true;
 });
+// Updater IPC handlers
+ipcMain.handle('updater:check', async () => {
+  try {
+    const result = await updater.checkForUpdates(false);
+    return { success: true, result };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+});
 
+ipcMain.handle('updater:download', async () => {
+  try {
+    await updater.downloadUpdate();
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle('updater:install', async () => {
+  try {
+    updater.quitAndInstall();
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle('updater:getVersion', async () => {
+  return updater.getCurrentVersion();
+});
 // Log app ready
 console.log('NarratorAI Desktop App Starting...');
 console.log('Development mode:', isDev);

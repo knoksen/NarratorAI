@@ -37,6 +37,14 @@ contextBridge.exposeInMainWorld('electron', {
     clear: () => ipcRenderer.invoke('recentFiles:clear')
   },
   
+  // Updater operations
+  updater: {
+    check: () => ipcRenderer.invoke('updater:check'),
+    download: () => ipcRenderer.invoke('updater:download'),
+    install: () => ipcRenderer.invoke('updater:install'),
+    getVersion: () => ipcRenderer.invoke('updater:getVersion')
+  },
+  
   // Menu event listeners
   onMenuOpenFile: (callback) => {
     ipcRenderer.on('menu-open-file', callback);
