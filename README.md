@@ -4,7 +4,7 @@ Transform your documents into engaging audio narratives with AI-powered enhancem
 
 **Available as:** Web Application | Windows Desktop App
 
-**Current Version:** 1.0.0
+**Current Version:** 1.1.0
 
 ---
 
