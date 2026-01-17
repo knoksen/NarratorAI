@@ -1,5 +1,4 @@
 // ConvertTextToSpeech story implementation.
-'use server';
 /**
  * @fileOverview Converts enhanced text into high-quality speech using a cloud-based TTS service.
  *

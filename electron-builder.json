@@ -8,9 +8,21 @@
   },
   "files": [
     "electron/**/*",
-    "out/**/*",
-    "node_modules/**/*",
-    "package.json"
+    ".next/**/*",
+    "public/**/*",
+    "package.json",
+    "package-lock.json",
+    "next.config.ts",
+    "node_modules/**/*"
+  ],
+  "asarUnpack": [
+    "node_modules/**/*"
+  ],
+  "extraResources": [
+    {
+      "from": "public",
+      "to": "public"
+    }
   ],
   "extraResources": [
     {

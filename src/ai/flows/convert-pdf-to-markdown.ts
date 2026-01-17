@@ -1,5 +1,4 @@
 // src/ai/flows/convert-pdf-to-markdown.ts
-'use server';
 /**
  * @fileOverview This file defines a Genkit flow for converting a PDF to Markdown.
  *

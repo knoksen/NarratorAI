@@ -268,15 +268,65 @@ function createWindow() {
   });
 
   // Load the app
-  const startUrl = isDev
-    ? 'http://localhost:9002'
-    : `file://${path.join(__dirname, '../out/index.html')}`;
-
-  mainWindow.loadURL(startUrl);
-
-  // Open DevTools in development
   if (isDev) {
+    // In development, connect to the dev server
+    mainWindow.loadURL('http://localhost:9002');
     mainWindow.webContents.openDevTools();
+  } else {
+    // In production, spawn Next.js server
+    const { spawn } = require('child_process');
+    const isWindows = process.platform === 'win32';
+    
+    // Find Next.js CLI - it's in node_modules/next/dist/bin/next
+    const nextCli = path.join(__dirname, '..', 'node_modules', 'next', 'dist', 'bin', 'next');
+    
+    const nextServer = spawn(process.execPath, [nextCli, 'start', '-p', '3000'], {
+      cwd: path.join(__dirname, '..'),
+      env: { ...process.env, NODE_ENV: 'production' },
+      stdio: 'pipe'
+    });
+    
+    let serverReady = false;
+    
+    nextServer.stdout.on('data', (data) => {
+      const output = data.toString();
+      console.log(`Next.js: ${output}`);
+      
+      // Check if server is ready
+      if (output.includes('Ready') || output.includes('started server') || output.includes('localhost:3000')) {
+        if (!serverReady) {
+          serverReady = true;
+          console.log('Next.js server is ready, loading app...');
+          mainWindow.loadURL('http://localhost:3000');
+        }
+      }
+    });
+    
+    nextServer.stderr.on('data', (data) => {
+      console.error(`Next.js Error: ${data.toString()}`);
+    });
+    
+    nextServer.on('error', (error) => {
+      console.error('Failed to start Next.js server:', error);
+      dialog.showErrorBox('Server Error', `Failed to start application server: ${error.message}`);
+    });
+    
+    // Fallback: Load after timeout if server hasn't signaled ready
+    setTimeout(() => {
+      if (!serverReady) {
+        console.log('Loading app after timeout...');
+        mainWindow.loadURL('http://localhost:3000');
+      }
+    }, 5000);
+    
+    // Cleanup on exit
+    app.on('before-quit', () => {
+      if (nextServer) {
+        nextServer.kill();
+      }
+    });
+      }
+    });
   }
 
   // Handle window closed

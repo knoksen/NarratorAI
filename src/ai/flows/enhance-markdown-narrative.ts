@@ -1,5 +1,4 @@
 // src/ai/flows/enhance-markdown-narrative.ts
-'use server';
 /**
  * @fileOverview This file defines a Genkit flow for enhancing markdown content to improve its narrative quality for audio.
  *

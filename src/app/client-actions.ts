@@ -1,6 +1,7 @@
-'use server';
+'use client';
 
-'use server';
+// Client-side wrappers for AI flows in static export mode
+// These run directly in the browser/electron environment
 
 import { enhanceMarkdownNarrative } from '@/ai/flows/enhance-markdown-narrative';
 import { convertTextToSpeech } from '@/ai/flows/convert-text-to-speech';
