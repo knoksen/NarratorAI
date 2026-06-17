@@ -123,8 +123,8 @@
   - [x] Update version in RELEASE_NOTES if needed (created RELEASE_NOTES_v1.1.0.md)
   - [x] Verify CHANGELOG.md has complete v1.1.0 notes (verified - complete)
   - [x] Run final `npm run typecheck` (passed in M8)
-  - [ ] Create git tag: `git tag v1.1.0`
-  - [ ] Push tags: `git push --tags`
+  - [x] Create git tag: `git tag v1.1.0`
+  - [x] Push tags: `git push origin v1.1.0`
 
 - [ ] **GitHub Release Creation**
   - [ ] Navigate to GitHub Releases page

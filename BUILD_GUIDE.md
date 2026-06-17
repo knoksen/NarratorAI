@@ -47,7 +47,7 @@ After building, you'll find these files in the `dist/` folder:
 
 ### Distribution Files
 
-1. **`NarratorAI-1.0.0-x64.exe`** (~176 MB)
+1. **`NarratorAI-1.1.0-x64.exe`** (~356 MB)
    - Full Windows installer (NSIS)
    - Installs to Program Files
    - Creates Start Menu shortcuts
@@ -55,7 +55,7 @@ After building, you'll find these files in the `dist/` folder:
    - Includes uninstaller
    - Recommended for most users
 
-2. **`NarratorAI-1.0.0-Portable.exe`** (~175 MB)
+2. **`NarratorAI-1.1.0-Portable.exe`** (~356 MB)
    - Portable executable
    - No installation required
    - Can run from any folder
@@ -65,7 +65,7 @@ After building, you'll find these files in the `dist/` folder:
 ### Support Files
 
 - `latest.yml` - Update metadata (for auto-updates)
-- `NarratorAI-1.0.0-x64.exe.blockmap` - Delta update support
+- `NarratorAI-1.1.0-x64.exe.blockmap` - Delta update support
 - `win-unpacked/` - Unpacked application files (for testing)
 
 ## 🎨 Icon Generation
@@ -98,13 +98,13 @@ npm run icon:check
 ### For End Users
 
 **Method 1: Installer (Recommended)**
-1. Share `NarratorAI-1.0.0-x64.exe`
+1. Share `NarratorAI-1.1.0-x64.exe`
 2. Users run the installer
 3. Choose installation directory
 4. Desktop and Start Menu shortcuts are created
 
 **Method 2: Portable**
-1. Share `NarratorAI-1.0.0-Portable.exe`
+1. Share `NarratorAI-1.1.0-Portable.exe`
 2. Users can run it directly from any folder
 3. No installation required
 
@@ -176,11 +176,11 @@ Available targets:
 
 ### Large File Size
 
-The ~175 MB size is normal and includes:
-- Electron framework (~80 MB)
-- Chromium engine (~50 MB)
-- Node.js runtime (~15 MB)
-- Next.js app + dependencies (~30 MB)
+The ~356 MB size is normal and includes:
+- Electron 39.x framework (~80 MB)
+- Chromium engine (~130 MB)
+- Node.js runtime (~20 MB)
+- Next.js app + dependencies (~126 MB)
 
 **To reduce size:**
 - Remove unused dependencies
@@ -224,13 +224,13 @@ Before distribution, test both versions:
    ```
 
 2. **Test the installer:**
-   - Run `dist/NarratorAI-1.0.0-x64.exe`
+   - Run `dist/NarratorAI-1.1.0-x64.exe`
    - Install to a test location
    - Verify shortcuts work
    - Test uninstaller
 
 3. **Test the portable version:**
-   - Run `dist/NarratorAI-1.0.0-Portable.exe` directly
+   - Run `dist/NarratorAI-1.1.0-Portable.exe` directly
    - Test from different folders
    - Verify no admin rights needed
 
@@ -273,6 +273,6 @@ After successful build:
 
 **Built with:**
 - Next.js 16.1.1 (with Turbopack)
-- Electron 33.x
-- electron-builder 25.x
+- Electron 39.x
+- electron-builder 26.x
 - Windows NSIS installer
