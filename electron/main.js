@@ -325,8 +325,6 @@ function createWindow() {
         nextServer.kill();
       }
     });
-      }
-    });
   }
 
   // Handle window closed
@@ -609,7 +607,9 @@ ipcMain.handle('settings:selectFolder', async () => {
 
 // Recent files management
 ipcMain.handle('recentFiles:add', async (event, file) => {
-  settings.addRecentFile(file);  createMenu(); // Refresh menu to show updated recent files  return true;
+  settings.addRecentFile(file);
+  createMenu(); // Refresh menu to show updated recent files
+  return true;
 });
 
 ipcMain.handle('recentFiles:get', async () => {
