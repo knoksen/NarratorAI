@@ -1,0 +1,14 @@
+{
+	"apiKey": "",
+	"theme": "system",
+	"defaultSavePath": "",
+	"language": "en",
+	"autoUpdate": true,
+	"minimizeToTray": true,
+	"launchAtStartup": false,
+	"voice": {
+		"model": "gemini-2.5-flash",
+		"language": "en-US"
+	},
+	"recentFiles": []
+}
