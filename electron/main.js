@@ -210,9 +210,10 @@ function createMenu() {
 
 // Create system tray
 function createTray() {
-  // Create tray icon (use a simple icon for now)
-  const icon = nativeImage.createEmpty();
-  tray = new Tray(icon);
+  // Create tray icon from the existing icon file
+  const iconPath = path.join(__dirname, 'icon.png');
+  const icon = nativeImage.createFromPath(iconPath);
+  tray = new Tray(icon.isEmpty() ? nativeImage.createEmpty() : icon);
   
   const contextMenu = Menu.buildFromTemplate([
     {
