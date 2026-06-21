@@ -1,6 +1,7 @@
 const { autoUpdater } = require('electron-updater');
 const { dialog, BrowserWindow } = require('electron');
-const isDev = require('electron-is-dev');
+const electronIsDev = require('electron-is-dev');
+const isDev = typeof electronIsDev === 'boolean' ? electronIsDev : !!electronIsDev.default;
 const settings = require('./settings');
 
 /**

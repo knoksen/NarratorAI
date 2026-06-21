@@ -75,6 +75,14 @@ const enhanceMarkdownNarrativeFlow = ai.defineFlow(
     } catch (error) {
       console.error('Error enhancing markdown narrative:', error);
       if (error instanceof Error) {
+        const msg = error.message;
+
+        if (msg.includes('429') || msg.toLowerCase().includes('quota exceeded')) {
+          throw new Error(
+            'Gemini API quota exceeded. Check plan/billing, wait for quota reset, then try again.'
+          );
+        }
+
         throw new Error(`Failed to enhance content: ${error.message}`);
       }
       throw new Error('Failed to enhance content. Please check your API key and try again.');

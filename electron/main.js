@@ -7,11 +7,28 @@
 
 const { app, BrowserWindow, ipcMain, dialog, Menu, shell, Tray, nativeImage } = require('electron');
 const path = require('path');
-const isDev = require('electron-is-dev');
+const fs = require('fs');
+const electronIsDev = require('electron-is-dev');
+const isDev = typeof electronIsDev === 'boolean' ? electronIsDev : !!electronIsDev.default;
 const settings = require('./settings');
 const updater = require('./updater');
 const BatchProcessor = require('./batch-processor');
 const toast = require('./toast-manager');
+
+function configureAppPaths() {
+  try {
+    const profileRoot = path.join(app.getPath('appData'), 'NarratorAI', isDev ? 'dev-profile' : 'profile');
+    const sessionRoot = path.join(profileRoot, 'session-data');
+    fs.mkdirSync(profileRoot, { recursive: true });
+    fs.mkdirSync(sessionRoot, { recursive: true });
+    app.setPath('userData', profileRoot);
+    app.setPath('sessionData', sessionRoot);
+  } catch (error) {
+    console.warn('Could not configure Electron profile paths:', error);
+  }
+}
+
+configureAppPaths();
 
 let mainWindow;
 let tray = null;
@@ -26,17 +43,22 @@ function createMenu() {
   const recentFilesSubmenu = [];
   
   if (recentFiles.length > 0) {
-    recentFiles.forEach((file, index) => {
+    recentFiles.forEach((fileEntry, index) => {
+      const filePath = typeof fileEntry === 'string' ? fileEntry : fileEntry?.path;
+      if (!filePath) {
+        return;
+      }
+
       recentFilesSubmenu.push({
-        label: path.basename(file),
+        label: path.basename(filePath),
         accelerator: index < 9 ? `CmdOrCtrl+${index + 1}` : undefined,
         click: () => {
           if (mainWindow) {
-            mainWindow.webContents.send('menu-open-recent-file', file);
+            mainWindow.webContents.send('menu-open-recent-file', filePath);
           }
         },
         // Show full path in tooltip
-        toolTip: file
+        toolTip: filePath
       });
     });
     
@@ -260,6 +282,7 @@ function createWindow() {
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
+      sandbox: false,
       preload: path.join(__dirname, 'preload.js'),
       webSecurity: true,
     },
@@ -272,7 +295,6 @@ function createWindow() {
   if (isDev) {
     // In development, connect to the dev server
     mainWindow.loadURL('http://localhost:9002');
-    mainWindow.webContents.openDevTools();
   } else {
     // In production, spawn Next.js server
     const { spawn } = require('child_process');
@@ -333,9 +355,14 @@ function createWindow() {
     mainWindow = null;
   });
 
+  mainWindow.once('ready-to-show', () => {
+    mainWindow.show();
+    mainWindow.focus();
+  });
+
   // Minimize to tray on close (Windows behavior)
   mainWindow.on('close', (event) => {
-    if (!app.isQuitting && process.platform === 'win32') {
+    if (!app.isQuitting && process.platform === 'win32' && !isDev && settings.getMinimizeToTray()) {
       event.preventDefault();
       mainWindow.hide();
     }
@@ -351,7 +378,9 @@ function createWindow() {
 // App lifecycle events
 app.whenReady().then(() => {
   createMenu();
-  createTray();
+  if (!isDev) {
+    createTray();
+  }
   createWindow();
 
   app.on('activate', () => {

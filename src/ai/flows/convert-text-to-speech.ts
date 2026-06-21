@@ -83,7 +83,9 @@ const convertTextToSpeechFlow = ai.defineFlow(
       });
       
       if (!media || !media.url) {
-        throw new Error('No audio was generated. Please try again.');
+        throw new Error(
+          'No audio was generated. Your key may not have Gemini TTS quota/model access. Enable billing/quota and retry.'
+        );
       }
       
       const audioBuffer = Buffer.from(
@@ -99,6 +101,14 @@ const convertTextToSpeechFlow = ai.defineFlow(
     } catch (error) {
       console.error('Error converting text to speech:', error);
       if (error instanceof Error) {
+        const msg = error.message;
+
+        if (msg.includes('429') || msg.toLowerCase().includes('quota exceeded')) {
+          throw new Error(
+            'Gemini API quota exceeded. Check plan/billing, wait for quota reset, then try again.'
+          );
+        }
+
         throw new Error(`Failed to generate audio: ${error.message}`);
       }
       throw new Error('Failed to generate audio. Please check your API key and try again.');
